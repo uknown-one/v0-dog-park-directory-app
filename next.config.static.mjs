@@ -1,12 +1,14 @@
 /** @type {import('next').NextConfig} */
+// Alternative configuration for static export (GitHub Pages compatible)
+// Use this config if you remove API routes and authentication
 const nextConfig = {
-  // Static export is incompatible with API routes and NextAuth
-  // output: 'export',
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true
   },
-  // Uncomment and modify these lines if deploying to a repository subdirectory
+  // Configure for GitHub Pages subdirectory deployment
+  // Uncomment and modify if deploying to repository subdirectory
   // basePath: '/dog-park-directory',
   // assetPrefix: '/dog-park-directory/',
   eslint: {

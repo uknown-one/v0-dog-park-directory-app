@@ -22,6 +22,7 @@ interface GoogleMapProps {
 }
 
 export function GoogleMap({ center, zoom = 13, markers = [], className = "" }: GoogleMapProps) {
+const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
   const mapRef = useRef<HTMLDivElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)

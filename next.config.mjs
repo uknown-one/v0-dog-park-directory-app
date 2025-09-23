@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Static export is incompatible with API routes and NextAuth
-  output: 'export',
+  //output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true

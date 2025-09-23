@@ -9,8 +9,8 @@ const nextConfig = {
   },
   // Configure for GitHub Pages subdirectory deployment
   // Uncomment and modify if deploying to repository subdirectory
-  // basePath: '/dog-park-directory',
-  // assetPrefix: '/dog-park-directory/',
+   basePath: '/dog-park-directory',
+   assetPrefix: '/dog-park-directory/',
   eslint: {
     ignoreDuringBuilds: true,
   },

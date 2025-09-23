@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { SearchFilters } from "@/components/search-filters"
 import { ParkGrid } from "@/components/park-grid"
 import { ParkMap } from "@/components/park-map"
+import { ViewToggle } from "@/components/view-toggle"
 
 interface ParksPageProps {
   searchParams: {
@@ -19,7 +20,10 @@ export default function ParksPage({ searchParams }: ParksPageProps) {
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dog Parks Directory</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold text-foreground">Dog Parks Directory</h1>
+            <ViewToggle />
+          </div>
           <p className="text-muted-foreground">
             {location ? `Parks in ${location}` : "Discover amazing dog parks near you"}
           </p>
@@ -41,7 +45,7 @@ export default function ParksPage({ searchParams }: ParksPageProps) {
           <main className="flex-1">
             {view === "map" ? (
               <Suspense fallback={<div className="h-96 bg-card animate-pulse rounded-lg" />}>
-                <ParkMap />
+                <ParkMap location={location} amenities={amenities?.split(",") || []} sortBy={sortBy} />
               </Suspense>
             ) : (
               <Suspense

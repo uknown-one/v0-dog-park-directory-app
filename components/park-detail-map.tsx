@@ -22,15 +22,6 @@ export function ParkMap({ park }: ParkDetailMapProps) {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, "_blank")
   }
 
-  const mapCenter = { lat: park.latitude, lng: park.longitude }
-  const mapMarkers = [
-    {
-      position: mapCenter,
-      title: park.name,
-      info: `${park.address}, ${park.city}, ${park.state}`,
-    },
-  ]
-
   return (
     <Card>
       <CardHeader>
@@ -40,7 +31,24 @@ export function ParkMap({ park }: ParkDetailMapProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <GoogleMap center={mapCenter} markers={mapMarkers} className="h-64" />
+        <GoogleMap
+          center={{
+            lat: park.latitude,
+            lng: park.longitude,
+          }}
+          zoom={15}
+          markers={[
+            {
+              id: park.name,
+              position: {
+                lat: park.latitude,
+                lng: park.longitude,
+              },
+              title: park.name,
+            },
+          ]}
+          className="h-64"
+        />
 
         <div className="space-y-3">
           <div>

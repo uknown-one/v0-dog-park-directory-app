@@ -2,10 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, MapPin, Share2, Flag, Phone, Globe, Clock } from "lucide-react"
+import { Star, MapPin, Heart, Share2, Flag, Phone, Globe, Clock } from "lucide-react"
 import { AMENITIES } from "@/lib/types"
-import { FavoriteButton } from "./favorite-button"
-import { toast } from "sonner"
 
 interface ParkHeaderProps {
   park: {
@@ -37,13 +35,8 @@ export function ParkHeader({ park }: ParkHeaderProps) {
       }
     } else {
       // Fallback to copying URL
-      await navigator.clipboard.writeText(window.location.href)
-      toast.success("Link copied to clipboard!")
+      navigator.clipboard.writeText(window.location.href)
     }
-  }
-
-  const handleReport = () => {
-    toast.info("Report functionality coming soon")
   }
 
   return (
@@ -67,14 +60,14 @@ export function ParkHeader({ park }: ParkHeaderProps) {
 
           <div className="flex items-center gap-2 mb-4">
             {park.contact?.phone && (
-              <Button variant="outline" size="sm" onClick={() => window.open(`tel:${park.contact?.phone}`)}>
+              <Button variant="outline" size="sm">
                 <Phone className="h-4 w-4 mr-1" />
                 Call
               </Button>
             )}
 
             {park.contact?.website && (
-              <Button variant="outline" size="sm" onClick={() => window.open(park.contact?.website, "_blank")}>
+              <Button variant="outline" size="sm">
                 <Globe className="h-4 w-4 mr-1" />
                 Website
               </Button>
@@ -88,14 +81,17 @@ export function ParkHeader({ park }: ParkHeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <FavoriteButton parkId={park.id} variant="outline" size="sm" />
+          <Button variant="outline" size="sm">
+            <Heart className="h-4 w-4 mr-1" />
+            Save
+          </Button>
 
           <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="h-4 w-4 mr-1" />
             Share
           </Button>
 
-          <Button variant="outline" size="sm" onClick={handleReport}>
+          <Button variant="outline" size="sm">
             <Flag className="h-4 w-4 mr-1" />
             Report
           </Button>

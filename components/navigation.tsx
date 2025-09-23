@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useSession, signOut } from "next-auth/react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,27 +14,55 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Heart, Plus, User, Settings, LogOut, Shield, Home, MapPin, Map } from "lucide-react"
+import { Menu, Heart, Plus, UserIcon, Settings, LogOut, Shield, Home, MapPin } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function Navigation() {
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Get initial session
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
 
   const navigationItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/parks", label: "Find Parks", icon: MapPin },
-    { href: "/map", label: "Map View", icon: Map },
     { href: "/parks/add", label: "Add Park", icon: Plus },
   ]
 
   const userMenuItems = [
-    { href: "/profile", label: "Profile", icon: User },
+    { href: "/profile", label: "Profile", icon: UserIcon },
     { href: "/favorites", label: "Favorites", icon: Heart },
     { href: "/settings", label: "Settings", icon: Settings },
   ]
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/" })
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push("/")
+    router.refresh()
   }
 
   return (
@@ -61,25 +90,26 @@ export function Navigation() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {status === "loading" ? (
+            {loading ? (
               <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
-            ) : session ? (
+            ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={session.user?.image || ""} alt={session.user?.name || ""} />
-                      <AvatarFallback>{session.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                      <AvatarImage
+                        src={user.user_metadata?.avatar_url || ""}
+                        alt={user.user_metadata?.full_name || ""}
+                      />
+                      <AvatarFallback>{user.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      {session.user?.name && <p className="font-medium">{session.user.name}</p>}
-                      {session.user?.email && (
-                        <p className="w-[200px] truncate text-sm text-muted-foreground">{session.user.email}</p>
-                      )}
+                      {user.user_metadata?.full_name && <p className="font-medium">{user.user_metadata.full_name}</p>}
+                      {user.email && <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>}
                     </div>
                   </div>
                   <DropdownMenuSeparator />
@@ -107,7 +137,7 @@ export function Navigation() {
               </DropdownMenu>
             ) : (
               <Button asChild>
-                <Link href="/auth/signin">Sign In</Link>
+                <Link href="/auth/login">Sign In</Link>
               </Button>
             )}
           </div>
@@ -122,15 +152,18 @@ export function Navigation() {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-6">
-                  {session && (
+                  {user && (
                     <div className="flex items-center space-x-3 pb-4 border-b">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={session.user?.image || ""} alt={session.user?.name || ""} />
-                        <AvatarFallback>{session.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                        <AvatarImage
+                          src={user.user_metadata?.avatar_url || ""}
+                          alt={user.user_metadata?.full_name || ""}
+                        />
+                        <AvatarFallback>{user.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{session.user?.name}</p>
-                        <p className="text-sm text-muted-foreground">{session.user?.email}</p>
+                        <p className="font-medium">{user.user_metadata?.full_name || "User"}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                   )}
@@ -147,7 +180,7 @@ export function Navigation() {
                     </Link>
                   ))}
 
-                  {session ? (
+                  {user ? (
                     <>
                       <div className="border-t pt-4">
                         {userMenuItems.map((item) => (
@@ -179,7 +212,7 @@ export function Navigation() {
                   ) : (
                     <div className="border-t pt-4">
                       <Button asChild className="w-full">
-                        <Link href="/auth/signin" onClick={() => setIsOpen(false)}>
+                        <Link href="/auth/login" onClick={() => setIsOpen(false)}>
                           Sign In
                         </Link>
                       </Button>

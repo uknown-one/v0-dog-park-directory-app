@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, ThumbsUp, MessageCircle, Filter } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
-import { ReviewForm } from "./review-form"
 
 interface ParkReviewsProps {
   parkId: string
@@ -80,7 +79,6 @@ const ratingBreakdown = {
 export function ParkReviews({ parkId }: ParkReviewsProps) {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "helpful">("newest")
   const [filterRating, setFilterRating] = useState<number | null>(null)
-  const [showReviewForm, setShowReviewForm] = useState(false)
 
   const totalReviews = Object.values(ratingBreakdown).reduce((sum, count) => sum + count, 0)
   const averageRating = (
@@ -94,20 +92,15 @@ export function ParkReviews({ parkId }: ParkReviewsProps) {
     ))
   }
 
-  const handleReviewSubmitted = () => {
-    setShowReviewForm(false)
-    // In a real app, you would refresh the reviews list here
-  }
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Reviews & Ratings</span>
-            <Button onClick={() => setShowReviewForm(!showReviewForm)}>
+            <Button>
               <MessageCircle className="h-4 w-4 mr-2" />
-              {showReviewForm ? "Cancel" : "Write Review"}
+              Write Review
             </Button>
           </CardTitle>
         </CardHeader>
@@ -143,8 +136,6 @@ export function ParkReviews({ parkId }: ParkReviewsProps) {
           </div>
         </CardContent>
       </Card>
-
-      {showReviewForm && <ReviewForm parkId={parkId} onReviewSubmitted={handleReviewSubmitted} />}
 
       <Card>
         <CardHeader>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Card } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
 interface GoogleMapProps {
   center: {
@@ -10,74 +10,62 @@ interface GoogleMapProps {
   }
   zoom?: number
   markers?: Array<{
-    position: { lat: number; lng: number }
+    id: string
+    position: {
+      lat: number
+      lng: number
+    }
     title: string
-    info?: string
+    onClick?: () => void
   }>
   className?: string
 }
 
-declare global {
-  interface Window {
-    google: any
-    initMap: () => void
-  }
-}
-
-export function GoogleMap({ center, zoom = 15, markers = [], className = "" }: GoogleMapProps) {
+export function GoogleMap({ center, zoom = 13, markers = [], className = "" }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      initializeMap()
-      return
-    }
+    const loadGoogleMaps = async () => {
+      try {
+        // Check if Google Maps is already loaded
+        if (window.google && window.google.maps) {
+          initializeMap()
+          return
+        }
 
-    // Load Google Maps script
-    const script = document.createElement("script")
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
+        // Load Google Maps script
+        const script = document.createElement("script")
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
+        script.async = true
+        script.defer = true
 
-    script.onload = () => {
-      setIsLoaded(true)
-      initializeMap()
-    }
+        script.onload = () => {
+          initializeMap()
+        }
 
-    script.onerror = () => {
-      setError("Failed to load Google Maps")
-    }
+        script.onerror = () => {
+          setError("Failed to load Google Maps")
+        }
 
-    document.head.appendChild(script)
-
-    return () => {
-      // Cleanup script if component unmounts
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
+        document.head.appendChild(script)
+      } catch (err) {
+        setError("Error loading Google Maps")
       }
     }
-  }, [])
 
-  const initializeMap = () => {
-    if (!mapRef.current || !window.google) return
+    const initializeMap = () => {
+      if (!mapRef.current || !window.google) return
 
-    try {
       const map = new window.google.maps.Map(mapRef.current, {
         center,
         zoom,
         styles: [
           {
-            featureType: "poi.park",
-            elementType: "geometry.fill",
-            stylers: [{ color: "#a8e6a3" }],
-          },
-          {
-            featureType: "poi.park",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#2d5a2d" }],
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }],
           },
         ],
       })
@@ -89,57 +77,45 @@ export function GoogleMap({ center, zoom = 15, markers = [], className = "" }: G
           map,
           title: marker.title,
           icon: {
-            url:
-              "data:image/svg+xml;charset=UTF-8," +
-              encodeURIComponent(`
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 2C11.6 2 8 5.6 8 10C8 16 16 30 16 30S24 16 24 10C24 5.6 20.4 2 16 2Z" fill="#f59e0b"/>
-                <circle cx="16" cy="10" r="4" fill="white"/>
-              </svg>
-            `),
+            url: "/dog-paw-marker.jpg",
             scaledSize: new window.google.maps.Size(32, 32),
-            anchor: new window.google.maps.Point(16, 32),
           },
         })
 
-        if (marker.info) {
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: `<div class="p-2"><strong>${marker.title}</strong><br/>${marker.info}</div>`,
-          })
-
-          mapMarker.addListener("click", () => {
-            infoWindow.open(map, mapMarker)
-          })
+        if (marker.onClick) {
+          mapMarker.addListener("click", marker.onClick)
         }
       })
-    } catch (err) {
-      setError("Failed to initialize map")
-      console.error("Google Maps initialization error:", err)
+
+      setIsLoaded(true)
     }
-  }
+
+    loadGoogleMaps()
+  }, [center, zoom, markers])
 
   if (error) {
     return (
-      <Card className={`p-6 ${className}`}>
-        <div className="text-center text-muted-foreground">
-          <p>Unable to load map</p>
-          <p className="text-sm mt-1">{error}</p>
-        </div>
-      </Card>
+      <div className={`bg-muted rounded-lg flex items-center justify-center p-8 ${className}`}>
+        <p className="text-muted-foreground">Unable to load map</p>
+      </div>
     )
   }
 
   return (
     <div className={`relative ${className}`}>
-      <div ref={mapRef} className="w-full h-full rounded-lg" />
       {!isLoaded && (
-        <div className="absolute inset-0 bg-muted rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-            <p className="text-sm text-muted-foreground">Loading map...</p>
-          </div>
+        <div className="absolute inset-0 bg-muted rounded-lg flex items-center justify-center z-10">
+          <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       )}
+      <div ref={mapRef} className="w-full h-full rounded-lg" />
     </div>
   )
+}
+
+// Extend Window interface for TypeScript
+declare global {
+  interface Window {
+    google: any
+  }
 }
